@@ -39,9 +39,24 @@ label{display:block;color:#aabecb;font-weight:650;font-size:11px;letter-spacing:
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}.fields label{margin-top:9px}
 .actions{display:flex;gap:8px;margin-top:16px}.actions .btn{flex:1}.danger{color:#ffadad;border-color:#794c53}
 .notice{border:1px solid #415667;background:#1c2b39;border-radius:9px;color:#bed0db;padding:11px;font-size:11px;margin-top:18px}
-#walkpad{position:absolute;bottom:64px;left:16px;z-index:3;display:grid;grid-template-columns:repeat(3,42px);gap:4px}
-#walkpad[hidden]{display:none}#walkpad button{height:43px;background:#183244d9;border:1px solid #618096;color:white;border-radius:8px;touch-action:none}
+/* Begehungsmodus: grosse Touch-Flaechen, zentrale Zielmarkierung */
+#walkpad{position:absolute;bottom:72px;left:18px;z-index:6;display:grid;grid-template-columns:repeat(3,clamp(52px,5vw,72px));gap:5px;touch-action:none;user-select:none}
+#walkpad[hidden],#walkhud[hidden]{display:none!important}
+#walkpad button{height:clamp(52px,5vw,72px);background:#142f42e8;border:1px solid #6ca8bc;color:white;border-radius:14px;touch-action:none;font-size:23px;user-select:none}
+#walkpad button:active{background:#2e7d96}
 #walkpad button[data-key=w]{grid-column:2}#walkpad button[data-key=a]{grid-column:1}#walkpad button[data-key=s]{grid-column:2}#walkpad button[data-key=d]{grid-column:3}
+#walkhud{position:absolute;inset:0;z-index:5;pointer-events:none}
+#reticle{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);border:1px solid #d7f4ff70;border-radius:50%;box-shadow:0 0 10px #082a34}
+#reticle:before,#reticle:after{content:'';position:absolute;background:#e5faffaa}
+#reticle:before{height:1px;width:7px;left:7px;top:11px}#reticle:after{height:7px;width:1px;left:10px;top:8px}
+#reticle.target{border-color:#96ffe0;box-shadow:0 0 12px #3ccbaa}
+#target-label{position:absolute;left:50%;top:calc(50% + 24px);transform:translateX(-50%);background:#0b1f2ce8;border:1px solid #72a7b8;border-radius:9px;padding:6px 11px;white-space:nowrap;color:#dcfaff;font-size:12px;display:none;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.walk-actions{position:absolute;right:20px;bottom:85px;display:flex;flex-direction:column;gap:9px;pointer-events:auto}
+.walk-actions button{min-width:144px;min-height:55px;padding:9px 13px;border:1px solid #7399ac;border-radius:12px;color:#fff;background:#17364bcf;touch-action:manipulation}
+.walk-actions button.primary{background:#267d94;border-color:#73d7e6}
+.walk-actions button:disabled{opacity:.42;cursor:not-allowed}
+.walk-status{position:absolute;top:88px;right:16px;background:#0c202dba;padding:6px 10px;border:1px solid #3d6575;border-radius:8px;font-size:11px;color:#bfd8e3}
+@media(max-width:720px){#walkpad{bottom:45px;left:9px;grid-template-columns:repeat(3,46px);gap:3px}#walkpad button{height:46px;font-size:18px}.walk-actions{right:8px;bottom:53px}.walk-actions button{min-height:42px;min-width:92px;font-size:11px}.walk-status{top:100px;right:8px}.scene-foot .hint{max-width:180px;font-size:9px}}
 .status-pill{color:#a9dec9;font-size:11px}#message{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#132b39;color:white;border:1px solid #4c899e;border-radius:11px;padding:11px 18px;z-index:20;display:none;max-width:90vw}
 @media(max-width:1000px){.workspace{grid-template-columns:190px minmax(240px,1fr) 220px}aside{padding:13px}.toolbar .btn{padding:7px}}
 @media(max-width:720px){.app{height:auto;min-height:100dvh}header{flex-wrap:wrap}.workspace{display:flex;flex-direction:column}main{height:60vh;min-height:380px;order:0}aside:first-child{order:1}aside:last-child{order:2}aside{border:0;border-top:1px solid var(--stroke)}.scene-top{flex-wrap:wrap}.view-switch button{padding:7px}.scene-title{font-size:13px}}
@@ -63,7 +78,8 @@ label{display:block;color:#aabecb;font-weight:650;font-size:11px;letter-spacing:
 <button class="btn" style="width:100%;margin-top:12px" id="reset">Beispielszene zurücksetzen</button>
 </aside>
 <main><div class="scene-top"><div><div class="eyebrow">Digitaler Zwilling / Demo</div><div class="scene-title">Baustelle Nord · Raumansicht</div></div><div class="view-switch"><button class="active" data-view="iso">Übersicht</button><button data-view="top">Draufsicht</button><button data-view="walk">Begehung</button></div></div>
-<div id="stage"><div id="walkpad" hidden><button data-key="w">▲</button><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div>
+<div id="stage"><div id="walkpad" hidden aria-label="Bewegungssteuerung"><button data-key="w" aria-label="Vorwärts">▲</button><button data-key="a" aria-label="Links">◀</button><button data-key="s" aria-label="Rückwärts">▼</button><button data-key="d" aria-label="Rechts">▶</button></div>
+<div id="walkhud" hidden><div id="reticle"></div><div id="target-label"></div><div class="walk-status" id="walk-status">BEGEHUNG · X 3,0 / Z 10,0</div><div class="walk-actions"><button class="primary" id="inspect-target" disabled>Objekt prüfen</button><button id="leave-walk">← Übersicht</button></div></div>
 <div class="scene-foot"><div id="hint" class="hint">Ziehen: Kamera drehen · Pinch/Scrollen: Zoom · Objekt antippen: Bearbeiten</div><div class="tools" id="tools"><button class="btn active" data-tool="translate" title="Verschieben">↔</button><button class="btn" data-tool="rotate" title="Drehen">↻</button><button class="btn" data-tool="scale" title="Skalieren">⤢</button><button class="btn" id="home" title="Ansicht zurücksetzen">⌂</button></div></div></div>
 <div class="statbar"><div><span>OBJEKTE </span><strong id="count">0</strong></div><div><span>EINSATZSITUATIONEN </span><strong>ES-01 / ES-02 (Demo)</strong></div><div><span>SPEICHERUNG </span><strong id="saved">Lokal</strong></div></div>
 </main>
@@ -129,7 +145,23 @@ const demo=[{type:'container',pos:[-9,0,6]},{type:'chemical',pos:[7,0,-6],name:'
 function startDemo(){restore(demo.map((d,i)=>({type:d.type,name:d.name||ids[d.type],id:'AT-'+String(i+1).padStart(3,'0'),status:i===1?'bearbeitung':'offen',pos:d.pos,rot:0,scale:[1,1,1]})));nextId=demo.length+1}
 function message(s){const el=byId('message');el.textContent=s;el.style.display='block';clearTimeout(message.t);message.t=setTimeout(()=>el.style.display='none',3500)}
 function lookHome(which){active=ortho;orbit.enabled=true;transform.camera=ortho;ortho.position.set(which==='top'?0.01:24,which==='top'?32:23,which==='top'?0.01:25);ortho.lookAt(0,0,0);orbit.target.set(0,0,0);orbit.update();ortho.zoom=1;ortho.updateProjectionMatrix()}
-function setView(which){view=which;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===which));byId('walkpad').hidden=which!=='walk';byId('tools').style.display=which==='walk'?'none':'flex';if(which==='walk'){transform.detach();orbit.enabled=false;active=walkCamera;walkCamera.position.set(3,1.8,10);walkYaw=Math.PI;walkPitch=0;message('WASD oder die Pfeiltasten zur Bewegung. Ziehen zum Umschauen.')}else{lookHome(which);if(selected)transform.attach(selected)}}
+function setView(which){
+ view=which;
+ document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===which));
+ byId('walkpad').hidden=which!=='walk';byId('walkhud').hidden=which!=='walk';
+ byId('tools').style.display=which==='walk'?'none':'flex';
+ byId('hint').textContent=which==='walk'?'Touch-Pfeile / WASD: bewegen · Im Bild ziehen: umsehen · Objekt antippen oder E: prüfen':'Ziehen: Kamera drehen · Pinch/Scrollen: Zoom · Objekt antippen: Bearbeiten';
+ walkPress.clear();walkSpeed.set(0,0,0);pointerStart=null;
+ if(which==='walk'){
+  transform.detach();orbit.enabled=false;active=walkCamera;
+  walkCamera.position.set(3.9,1.8,10);walkYaw=0;walkPitch=-0.06;
+  updateWalkCamera();
+  message('Begehung gestartet: Bewege dich mit WASD oder den Touch-Pfeilen.');
+ }else{
+  currentTarget=null;byId('target-label').style.display='none';
+  lookHome(which);if(selected)transform.attach(selected);
+ }
+}
 byId('home').onclick=()=>lookHome(view);
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('active'));b.classList.add('active');transform.setMode(b.dataset.tool)});
@@ -144,14 +176,123 @@ byId('json-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{
 byId('load-glb').onclick=()=>byId('glb-file').click();
 byId('glb-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);try{const gltf=await new GLTFLoader().loadAsync(url);const g=tag(gltf.scene,'glb',f.name);world.add(g);objects.push(g);select(g);save();message('GLB geladen. Importierte GLB-Dateien werden nicht in JSON gespeichert.')}catch(err){message('GLB-Import fehlgeschlagen: '+err.message)}finally{URL.revokeObjectURL(url);e.target.value=''}};
 const ray=new THREE.Raycaster(),point=new THREE.Vector2();
-let down=null;
-renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(view==='walk'){pointerStart=[e.clientX,e.clientY]}});
-renderer.domElement.addEventListener('pointermove',e=>{if(view==='walk'&&pointerStart){walkYaw-=(e.clientX-pointerStart[0])*.004;walkPitch=Math.max(-1.2,Math.min(1.2,walkPitch-(e.clientY-pointerStart[1])*.003));pointerStart=[e.clientX,e.clientY]}});
-renderer.domElement.addEventListener('pointerup',e=>{if(view==='walk'){pointerStart=null;return}if(dragging||!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>7)return;const r=renderer.domElement.getBoundingClientRect();point.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(point,ortho);const hits=ray.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o&&!o.userData.item)o=o.parent;if(o)select(o)}else select(null)});
-window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;walkPress.add(e.key.toLowerCase());if(view!=='walk'){if(e.key.toLowerCase()==='g')transform.setMode('translate');if(e.key.toLowerCase()==='r')transform.setMode('rotate');if(e.key.toLowerCase()==='s')transform.setMode('scale')}});
+let down=null,currentTarget=null,gamepadInspectHeld=false,gamepadExitHeld=false;
+const walkSpeed=new THREE.Vector3();
+function pick(x,y,camera,reach=Infinity){
+ const rect=renderer.domElement.getBoundingClientRect();
+ point.set((x-rect.left)/rect.width*2-1,-((y-rect.top)/rect.height*2-1));
+ ray.setFromCamera(point,camera);ray.far=reach;
+ const hits=ray.intersectObjects(objects,true);
+ ray.far=Infinity;
+ if(!hits.length)return null;
+ let o=hits[0].object;
+ while(o&&!o.userData.item)o=o.parent;
+ return o||null;
+}
+function updateWalkCamera(){
+ walkCamera.rotation.order='YXZ';
+ walkCamera.rotation.y=walkYaw;walkCamera.rotation.x=walkPitch;
+}
+function inspect(g){
+ if(!g)return message('Kein Objekt in Reichweite. Nähere dich und ziele darauf.');
+ select(g);message(g.userData.name+' ausgewählt – Details rechts im Inspektor.');
+}
+function inspectCenter(){
+ if(view!=='walk')return;
+ const rect=renderer.domElement.getBoundingClientRect();
+ inspect(pick(rect.left+rect.width/2,rect.top+rect.height/2,walkCamera,6.5));
+}
+byId('inspect-target').onclick=inspectCenter;
+byId('leave-walk').onclick=()=>setView('iso');
+renderer.domElement.addEventListener('pointerdown',e=>{
+ down=[e.clientX,e.clientY];
+ if(view==='walk'){pointerStart=[e.clientX,e.clientY];try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}}
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(view==='walk'&&pointerStart){
+  walkYaw-=(e.clientX-pointerStart[0])*.004;
+  walkPitch=Math.max(-1.25,Math.min(1.25,walkPitch-(e.clientY-pointerStart[1])*.003));
+  pointerStart=[e.clientX,e.clientY];updateWalkCamera();
+ }
+});
+renderer.domElement.addEventListener('pointerup',e=>{
+ pointerStart=null;
+ if(!down)return;
+ const tapped=Math.hypot(e.clientX-down[0],e.clientY-down[1])<10;
+ down=null;
+ if(!tapped||dragging)return;
+ if(view==='walk'){
+  const picked=pick(e.clientX,e.clientY,walkCamera,7);
+  if(picked)inspect(picked);
+  return;
+ }
+ const picked=pick(e.clientX,e.clientY,ortho);
+ select(picked);
+});
+renderer.domElement.addEventListener('pointercancel',()=>{pointerStart=null;down=null});
+window.addEventListener('keydown',e=>{
+ if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
+ const key=e.key.toLowerCase();
+ if(view==='walk'&&['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+ walkPress.add(key);
+ if(view==='walk'){if(key==='e')inspectCenter();if(key==='escape')setView('iso')}
+ else{if(key==='g')transform.setMode('translate');if(key==='r')transform.setMode('rotate');if(key==='s')transform.setMode('scale')}
+});
 window.addEventListener('keyup',e=>walkPress.delete(e.key.toLowerCase()));
-document.querySelectorAll('#walkpad button').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();walkPress.add(b.dataset.key);b.setPointerCapture(e.pointerId)};b.onpointerup=()=>walkPress.delete(b.dataset.key);b.onpointercancel=()=>walkPress.delete(b.dataset.key)});
-function tickWalk(delta){const forward=Number(walkPress.has('w')||walkPress.has('arrowup'))-Number(walkPress.has('s')||walkPress.has('arrowdown'));const right=Number(walkPress.has('d')||walkPress.has('arrowright'))-Number(walkPress.has('a')||walkPress.has('arrowleft'));const speed=delta*5;walkCamera.position.x+=(Math.sin(walkYaw)*forward+Math.cos(walkYaw)*right)*speed;walkCamera.position.z+=(Math.cos(walkYaw)*forward-Math.sin(walkYaw)*right)*speed;walkCamera.position.y=1.8;walkCamera.rotation.order='YXZ';walkCamera.rotation.y=walkYaw;walkCamera.rotation.x=walkPitch}
+window.addEventListener('blur',()=>{walkPress.clear();walkSpeed.set(0,0,0)});
+document.querySelectorAll('#walkpad button').forEach(b=>{
+ b.onpointerdown=e=>{e.preventDefault();walkPress.add(b.dataset.key);b.setPointerCapture(e.pointerId)};
+ b.onpointerup=()=>walkPress.delete(b.dataset.key);
+ b.onpointercancel=()=>walkPress.delete(b.dataset.key);
+ b.onlostpointercapture=()=>walkPress.delete(b.dataset.key);
+});
+const collisionBounds=new THREE.Box3(),avatarBox=new THREE.Box3();
+function isBlocked(x,z){
+ if(x< -12.7||x>12.7||z< -11.3||z>11.3)return true;
+ avatarBox.min.set(x-.32,.14,z-.32);avatarBox.max.set(x+.32,1.76,z+.32);
+ if(collisionBounds.setFromObject(building).intersectsBox(avatarBox))return true;
+ for(const obj of objects){
+  if(['drain','bund'].includes(obj.userData.type))continue;
+  if(collisionBounds.setFromObject(obj).intersectsBox(avatarBox))return true;
+ }
+ return false;
+}
+function axisDeadzone(n){return Math.abs(n)>.14?n:0}
+function tickWalk(delta){
+ let forward=Number(walkPress.has('w')||walkPress.has('arrowup'))-Number(walkPress.has('s')||walkPress.has('arrowdown'));
+ let right=Number(walkPress.has('d')||walkPress.has('arrowright'))-Number(walkPress.has('a')||walkPress.has('arrowleft'));
+ let pad=null;try{pad=navigator.getGamepads?.().find(p=>p&&p.connected)||null}catch(_){}
+ if(pad){
+  forward+=-axisDeadzone(pad.axes[1]||0);right+=axisDeadzone(pad.axes[0]||0);
+  walkYaw-=axisDeadzone(pad.axes[2]||0)*delta*2.2;
+  walkPitch=Math.max(-1.25,Math.min(1.25,walkPitch-axisDeadzone(pad.axes[3]||0)*delta*1.5));
+  const use=(pad.buttons[0]?.pressed||pad.buttons[2]?.pressed)||false;
+  if(use&&!gamepadInspectHeld)inspectCenter();
+  gamepadInspectHeld=use;
+  const back=pad.buttons[1]?.pressed||false;
+  if(back&&!gamepadExitHeld){gamepadExitHeld=true;setView('iso');return}
+  gamepadExitHeld=back;
+ }
+ const length=Math.hypot(forward,right);
+ if(length>1){forward/=length;right/=length}
+ const speed=walkPress.has('shift')?7:4.3;
+ const dx=(-Math.sin(walkYaw)*forward+Math.cos(walkYaw)*right)*speed;
+ const dz=(-Math.cos(walkYaw)*forward-Math.sin(walkYaw)*right)*speed;
+ const k=Math.min(1,delta*11);
+ walkSpeed.x+=(dx-walkSpeed.x)*k;walkSpeed.z+=(dz-walkSpeed.z)*k;
+ const nx=walkCamera.position.x+walkSpeed.x*delta,nz=walkCamera.position.z+walkSpeed.z*delta;
+ if(!isBlocked(nx,walkCamera.position.z))walkCamera.position.x=nx;else walkSpeed.x=0;
+ if(!isBlocked(walkCamera.position.x,nz))walkCamera.position.z=nz;else walkSpeed.z=0;
+ walkCamera.position.y=1.8;
+ updateWalkCamera();
+ const rect=renderer.domElement.getBoundingClientRect();
+ currentTarget=pick(rect.left+rect.width/2,rect.top+rect.height/2,walkCamera,6.5);
+ byId('reticle').classList.toggle('target',!!currentTarget);
+ byId('target-label').style.display=currentTarget?'block':'none';
+ if(currentTarget)byId('target-label').textContent=currentTarget.userData.name+' · '+currentTarget.userData.id;
+ byId('inspect-target').disabled=!currentTarget;
+ byId('walk-status').textContent='BEGEHUNG · X '+walkCamera.position.x.toFixed(1)+' / Z '+walkCamera.position.z.toFixed(1);
+}
 let old=performance.now();
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const asp=w/h;ortho.left=-13*asp;ortho.right=13*asp;ortho.top=13;ortho.bottom=-13;ortho.updateProjectionMatrix();walkCamera.aspect=asp;walkCamera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(stage);resize();
