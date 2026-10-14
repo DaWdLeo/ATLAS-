@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101923"><title>ATLAS / Baustelleneditor</title>
+<style>
+:root{color-scheme:dark;--bg:#0b131c;--panel:#15212e;--stroke:#2e4050;--text:#e9f2f8;--muted:#92a5b3;--accent:#6cc9e6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}
+.app{height:100dvh;min-height:600px;display:grid;grid-template-rows:60px minmax(0,1fr)}
+header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:8px 17px;border-bottom:1px solid var(--stroke);background:#101c28}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.14em;font-size:19px}.brand b{background:#b3e3f2;color:#12202d;padding:5px 12px;border-radius:9px}
+.sub{display:block;font-size:10px;letter-spacing:.13em;color:var(--muted);font-weight:500}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap}.btn{border:1px solid #385062;background:#1b2e3d;color:#e6f4fa;border-radius:9px;padding:9px 12px;min-height:39px}.btn:hover{background:#294354}.btn.primary{background:#27738e;border-color:#479bb2}
+.workspace{min-height:0;display:grid;grid-template-columns:245px minmax(300px,1fr) 275px}
+aside{background:var(--panel);padding:20px 16px;overflow:auto;min-width:0}aside:first-child{border-right:1px solid var(--stroke)}aside:last-child{border-left:1px solid var(--stroke)}
+.eyebrow{color:var(--accent);font-size:10px;letter-spacing:.16em;font-weight:700;text-transform:uppercase}
+h1{font-size:22px;line-height:1.22;margin:8px 0}h2{font-size:18px;line-height:1.2;margin:7px 0 15px}p{color:var(--muted);margin:8px 0 20px}
+.section{font-size:10px;color:var(--muted);letter-spacing:.12em;font-weight:700;margin:21px 0 9px}
+.asset{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:11px 10px;background:#1c2d3b;color:var(--text);border:1px solid #354a59;border-radius:9px;margin-bottom:7px;text-align:left}
+.asset:hover{background:#2c4857}.asset em{font-style:normal;color:var(--accent);font-size:19px}
+main{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;background:#0f202b}
+.scene-top{position:absolute;top:15px;left:17px;right:17px;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none;gap:12px}
+.scene-title{font-weight:700;font-size:16px;text-shadow:0 1px 8px #000}.scene-top .btn{pointer-events:auto}
+.view-switch{display:flex;gap:5px;padding:4px;background:#0c1925cc;border:1px solid #375466;border-radius:12px}
+.view-switch button{border:0;background:transparent;color:#b6cad6;border-radius:8px;padding:8px 9px;cursor:pointer}
+.view-switch button.active{background:#286c87;color:white}
+#stage{flex:1;position:relative;min-height:300px;touch-action:none;overflow:hidden}
+#stage canvas{width:100%;height:100%;display:block;touch-action:none}
+.scene-foot{position:absolute;bottom:13px;left:13px;right:13px;display:flex;justify-content:space-between;align-items:end;gap:12px;pointer-events:none}
+.hint{background:#0e1d28cd;border:1px solid #395466;padding:7px 10px;border-radius:8px;font-size:11px;color:#c6d9e4;max-width:410px}
+.tools{display:flex;gap:5px;pointer-events:auto;background:#101d29d9;border:1px solid #395466;padding:5px;border-radius:10px}
+.tools .btn{min-height:35px;padding:5px 10px}
+.tools .active{background:#316b82}
+.statbar{padding:11px 17px;display:flex;gap:25px;flex-wrap:wrap;background:#13212b;border-top:1px solid var(--stroke);font-size:12px}
+.statbar span{color:var(--muted)}
+.field{width:100%;min-width:0;color:var(--text);background:#0e1b25;border:1px solid #344d5b;padding:9px 10px;border-radius:8px;outline:none}.field:focus{border-color:#68c1df}
+label{display:block;color:#aabecb;font-weight:650;font-size:11px;letter-spacing:.05em;margin:13px 0 5px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}.fields label{margin-top:9px}
+.actions{display:flex;gap:8px;margin-top:16px}.actions .btn{flex:1}.danger{color:#ffadad;border-color:#794c53}
+.notice{border:1px solid #415667;background:#1c2b39;border-radius:9px;color:#bed0db;padding:11px;font-size:11px;margin-top:18px}
+#walkpad{position:absolute;bottom:64px;left:16px;z-index:3;display:grid;grid-template-columns:repeat(3,42px);gap:4px}
+#walkpad[hidden]{display:none}#walkpad button{height:43px;background:#183244d9;border:1px solid #618096;color:white;border-radius:8px;touch-action:none}
+#walkpad button[data-key=w]{grid-column:2}#walkpad button[data-key=a]{grid-column:1}#walkpad button[data-key=s]{grid-column:2}#walkpad button[data-key=d]{grid-column:3}
+.status-pill{color:#a9dec9;font-size:11px}#message{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#132b39;color:white;border:1px solid #4c899e;border-radius:11px;padding:11px 18px;z-index:20;display:none;max-width:90vw}
+@media(max-width:1000px){.workspace{grid-template-columns:190px minmax(240px,1fr) 220px}aside{padding:13px}.toolbar .btn{padding:7px}}
+@media(max-width:720px){.app{height:auto;min-height:100dvh}header{flex-wrap:wrap}.workspace{display:flex;flex-direction:column}main{height:60vh;min-height:380px;order:0}aside:first-child{order:1}aside:last-child{order:2}aside{border:0;border-top:1px solid var(--stroke)}.scene-top{flex-wrap:wrap}.view-switch button{padding:7px}.scene-title{font-size:13px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+</head>
+<body><div class="app">
+<header>
+<div class="brand"><b>A</b><div>ATLAS<small class="sub">SPATIAL WORKSPACE / LAB 01</small></div></div>
+<div class="toolbar"><button class="btn" id="load-glb">3D-Modell laden</button><button class="btn" id="import">Projekt laden</button><button class="btn primary" id="export">JSON exportieren</button></div>
+</header>
+<div class="workspace">
+<aside><div class="eyebrow">01 / Objektbibliothek</div><h1>Baustelle gestalten.</h1><p>Objekte antippen und im 3D-Raum platzieren.</p>
+<div class="section">BAUSTELLENEINRICHTUNG</div>
+<button class="asset" data-type="container">Baucontainer <em>+</em></button><button class="asset" data-type="fence">Bauzaun <em>+</em></button><button class="asset" data-type="pallet">Materiallager <em>+</em></button><button class="asset" data-type="excavator">Baumaschine <em>+</em></button>
+<div class="section">UMWELT & NOTFALL</div>
+<button class="asset" data-type="chemical">Gefahrstofflager <em>+</em></button><button class="asset" data-type="ibc">IBC-Behälter <em>+</em></button><button class="asset" data-type="drain">Entwässerung <em>+</em></button><button class="asset" data-type="bund">Rückhaltung <em>+</em></button><button class="asset" data-type="emergency">Notfallausrüstung <em>+</em></button>
+<div class="notice">ⓘ Alle dargestellten Daten sind fiktiv. Kein freigegebener BE-Plan oder Havarienachweis.</div>
+<button class="btn" style="width:100%;margin-top:12px" id="reset">Beispielszene zurücksetzen</button>
+</aside>
+<main><div class="scene-top"><div><div class="eyebrow">Digitaler Zwilling / Demo</div><div class="scene-title">Baustelle Nord · Raumansicht</div></div><div class="view-switch"><button class="active" data-view="iso">Übersicht</button><button data-view="top">Draufsicht</button><button data-view="walk">Begehung</button></div></div>
+<div id="stage"><div id="walkpad" hidden><button data-key="w">▲</button><button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button></div>
+<div class="scene-foot"><div id="hint" class="hint">Ziehen: Kamera drehen · Pinch/Scrollen: Zoom · Objekt antippen: Bearbeiten</div><div class="tools" id="tools"><button class="btn active" data-tool="translate" title="Verschieben">↔</button><button class="btn" data-tool="rotate" title="Drehen">↻</button><button class="btn" data-tool="scale" title="Skalieren">⤢</button><button class="btn" id="home" title="Ansicht zurücksetzen">⌂</button></div></div></div>
+<div class="statbar"><div><span>OBJEKTE </span><strong id="count">0</strong></div><div><span>EINSATZSITUATIONEN </span><strong>ES-01 / ES-02 (Demo)</strong></div><div><span>SPEICHERUNG </span><strong id="saved">Lokal</strong></div></div>
+</main>
+<aside><div class="eyebrow">02 / Inspektor</div><h2 id="object-title">Objekt auswählen</h2><p id="object-help">Berühre ein Objekt auf der Baustelle, um es zu bearbeiten.</p>
+<div id="inspector" hidden>
+<label>BEZEICHNUNG<input class="field" id="name"></label><label>OBJEKT-ID / LAGERORT-ID<input class="field" id="itemid"></label>
+<label>STATUS<select class="field" id="status"><option value="offen">Offen</option><option value="bearbeitung">In Bearbeitung</option><option value="geprueft">Geprüft (Demo)</option></select></label>
+<div class="fields"><label>X <input class="field" id="x" type="number" step="0.1"></label><label>Z <input class="field" id="z" type="number" step="0.1"></label></div>
+<label>DREHUNG (GRAD)<input class="field" id="rotation" type="number" step="5"></label>
+<label>NOTIZ / DATENVERWEIS<textarea class="field" id="notes" rows="3"></textarea></label>
+<div class="actions"><button class="btn" id="duplicate">Duplizieren</button><button class="btn danger" id="delete">Löschen</button></div>
+</div>
+<div class="section">EINSATZSITUATIONEN (DEMO)</div>
+<div class="notice">● ES-01 – Beispiel vollständig<br>◐ ES-02 – Beispiel in Bearbeitung</div>
+</aside></div></div>
+<input id="json-file" type="file" accept=".json,application/json" hidden><input id="glb-file" type="file" accept=".glb" hidden><div id="message" role="status"></div>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {TransformControls} from 'three/addons/controls/TransformControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const byId = (v) => document.getElementById(v);
+const stage=byId('stage'), objects=[], ids={container:'Baucontainer',fence:'Bauzaun',pallet:'Materiallager',excavator:'Baumaschine',chemical:'Gefahrstofflager',ibc:'IBC-Behälter',drain:'Entwässerungspunkt',bund:'Rückhaltung',emergency:'Notfallausrüstung',glb:'3D-Modell'};
+let selected=null,view='iso',nextId=1,dragging=false,walkYaw=0,walkPitch=0,walkPress=new Set(),pointerStart=null;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x102633);scene.fog=new THREE.Fog(0x102633,40,110);
+const ortho=new THREE.OrthographicCamera(-14,14,10,-10,.1,250),walkCamera=new THREE.PerspectiveCamera(70,1,.1,200);
+let active=ortho;
+const light=new THREE.HemisphereLight(0xddebf8,0x42596a,2.15);scene.add(light);
+const sun=new THREE.DirectionalLight(0xffdfb8,2.5);sun.position.set(-10,25,16);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-28;sun.shadow.camera.right=28;sun.shadow.camera.top=28;sun.shadow.camera.bottom=-28;scene.add(sun);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;stage.prepend(renderer.domElement);
+const orbit=new OrbitControls(ortho,renderer.domElement);orbit.enableDamping=true;orbit.minZoom=.55;orbit.maxZoom=3;orbit.target.set(0,0,0);
+const transform=new TransformControls(ortho,renderer.domElement);scene.add(transform.getHelper());transform.addEventListener('dragging-changed',e=>{dragging=e.value;orbit.enabled=!e.value;if(!e.value)save()});transform.addEventListener('objectChange',()=>{refreshFields();save()});
+const mat=(c,m=.04)=>new THREE.MeshStandardMaterial({color:c,roughness:.8,metalness:m});
+const M={ground:mat(0x768a80),road:mat(0x344653),gray:mat(0x93a5ae),blue:mat(0x527e9e),dark:mat(0x2a404f),yellow:mat(0xe5b64a),orange:mat(0xe49858),red:mat(0xc96e63),green:mat(0x63b6a1),water:mat(0x416e90),white:mat(0xe8e7de)};
+function box(g,w,h,d,m,x=0,y=h/2,z=0){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;g.add(mesh);return mesh}
+function cylinder(g,r,h,m,x=0,y=h/2,z=0){const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,16),m);mesh.position.set(x,y,z);mesh.castShadow=true;g.add(mesh);return mesh}
+function make(type){
+ const g=new THREE.Group();
+ if(type==='container'){box(g,3.7,2.1,2.3,M.blue);box(g,3.85,.12,2.45,M.dark,0,2.2,0);box(g,1,.8,.08,M.gray,-.8,1.5,1.18);box(g,.75,1.8,.08,M.dark,1.1,.9,1.18)}
+ else if(type==='fence'){for(const x of [-1.7,1.7])cylinder(g,.07,2.3,M.gray,x);box(g,3.4,1.5,.07,M.gray,0,1.15,0)}
+ else if(type==='pallet'){for(let z=-.6;z<1;z+=.6)box(g,2,.15,.4,M.orange,0,.1,z);for(let x of [-.5,.5])for(let z of [-.35,.4])box(g,.8,.72,.6,M.gray,x,.55,z)}
+ else if(type==='excavator'){box(g,2.8,.5,1.5,M.yellow,0,.65,0);box(g,1.3,1.1,1.3,M.yellow,-.5,1.5,0);for(const x of [-.9,.9])for(const z of [-.72,.72]){const wheel=cylinder(g,.34,.18,M.dark,x,.32,z);wheel.rotation.x=Math.PI/2}const arm=box(g,2.1,.25,.28,M.yellow,1.5,1.75,0);arm.rotation.z=.48;box(g,.8,.6,.8,M.dark,2.8,.85,0)}
+ else if(type==='chemical'){box(g,2.8,.12,2,M.dark);box(g,2.8,1.5,.1,M.red,0,.82,-.95);box(g,2.8,.16,2,M.red,0,1.6,0);for(const x of [-.65,.65])cylinder(g,.38,1.2,M.gray,x,.65,0)}
+ else if(type==='ibc'){box(g,1.35,.2,1.25,M.dark,0,.1,0);box(g,1.15,1.25,1.15,M.white,0,.85,0);box(g,1.2,.14,1.2,M.gray,0,1.52,0);cylinder(g,.15,.1,M.dark,0,1.65,0)}
+ else if(type==='drain'){box(g,1.7,.1,1.7,M.road,0,.04,0);for(let i=-3;i<=3;i++)box(g,.06,.03,1.45,M.gray,i*.2,.11,0)}
+ else if(type==='bund'){box(g,2.7,.15,2.7,M.blue,0,.08,0);for(const s of [-1,1]){box(g,2.7,.35,.17,M.blue,0,.23,s*1.25);box(g,.17,.35,2.7,M.blue,s*1.25,.23,0)}}
+ else if(type==='emergency'){box(g,.85,1.6,.52,M.green);box(g,.5,.12,.55,M.white,0,1,0);box(g,.12,.55,.55,M.white,0,1,0)}
+ return g
+}
+const world=new THREE.Group();scene.add(world);
+box(world,27,.22,24,M.ground,0,-.15,0);box(world,5,.03,24,M.road,4,.02,0);
+const building=new THREE.Group();world.add(building);building.position.set(-6,0,-4);box(building,6,.4,6,M.gray,0,.2,0);for(const x of [-2.75,2.75])for(const z of [-2.75,2.75])box(building,.4,4,.4,M.white,x,2.3,z);box(building,6,.22,6,M.gray,0,4.5,0);
+const grid=new THREE.GridHelper(27,27,0x5c747d,0x5c747d);grid.position.y=-.025;grid.material.transparent=true;grid.material.opacity=.17;scene.add(grid);
+function tag(g,type,label,id){g.userData={item:true,type:type,id:id||'AT-'+String(nextId++).padStart(3,'0'),name:label||ids[type],status:'offen',notes:''};return g}
+function add(type,x=0,z=0,label=null){const g=tag(make(type),type,label);g.position.set(x,0,z);world.add(g);objects.push(g);select(g);save();return g}
+function clear(){select(null);for(const g of objects)world.remove(g);objects.length=0}
+function select(g){selected=g;transform.detach();if(g&&view!=='walk')transform.attach(g);byId('inspector').hidden=!g;byId('object-title').textContent=g?g.userData.name:'Objekt auswählen';byId('object-help').style.display=g?'none':'block';refreshFields()}
+function refreshFields(){if(!selected)return;const d=selected.userData;byId('name').value=d.name;byId('itemid').value=d.id;byId('status').value=d.status;byId('x').value=selected.position.x.toFixed(2);byId('z').value=selected.position.z.toFixed(2);byId('rotation').value=(selected.rotation.y*180/Math.PI).toFixed(1);byId('notes').value=d.notes}
+function serialize(){return objects.filter(g=>g.userData.type!=='glb').map(g=>({type:g.userData.type,id:g.userData.id,name:g.userData.name,status:g.userData.status,notes:g.userData.notes,pos:g.position.toArray(),rot:g.rotation.y,scale:g.scale.toArray()}))}
+function save(){byId('count').textContent=objects.length;try{localStorage.setItem('atlas-scene-v1',JSON.stringify(serialize()));byId('saved').textContent='Lokal gespeichert'}catch(e){byId('saved').textContent='JSON exportieren'}}
+function restore(rows){clear();for(const d of rows){if(!ids[d.type]||d.type==='glb')continue;const g=make(d.type);tag(g,d.type,d.name,d.id);g.userData.status=d.status||'offen';g.userData.notes=d.notes||'';g.position.fromArray(d.pos||[0,0,0]);g.rotation.y=Number(d.rot)||0;g.scale.fromArray(d.scale||[1,1,1]);world.add(g);objects.push(g)}select(null);save()}
+const demo=[{type:'container',pos:[-9,0,6]},{type:'chemical',pos:[7,0,-6],name:'Gefahrstofflager L-01'},{type:'ibc',pos:[10,0,-6],name:'IBC / ES-02'},{type:'drain',pos:[7,0,-2],name:'Entwässerung D-01'},{type:'bund',pos:[10,0,-3]},{type:'pallet',pos:[-6,0,6]},{type:'fence',pos:[-10,0,-9]},{type:'excavator',pos:[0,0,5]},{type:'emergency',pos:[9,0,-8]}];
+function startDemo(){restore(demo.map((d,i)=>({type:d.type,name:d.name||ids[d.type],id:'AT-'+String(i+1).padStart(3,'0'),status:i===1?'bearbeitung':'offen',pos:d.pos,rot:0,scale:[1,1,1]})));nextId=demo.length+1}
+function message(s){const el=byId('message');el.textContent=s;el.style.display='block';clearTimeout(message.t);message.t=setTimeout(()=>el.style.display='none',3500)}
+function lookHome(which){active=ortho;orbit.enabled=true;transform.camera=ortho;ortho.position.set(which==='top'?0.01:24,which==='top'?32:23,which==='top'?0.01:25);ortho.lookAt(0,0,0);orbit.target.set(0,0,0);orbit.update();ortho.zoom=1;ortho.updateProjectionMatrix()}
+function setView(which){view=which;document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===which));byId('walkpad').hidden=which!=='walk';byId('tools').style.display=which==='walk'?'none':'flex';if(which==='walk'){transform.detach();orbit.enabled=false;active=walkCamera;walkCamera.position.set(3,1.8,10);walkYaw=Math.PI;walkPitch=0;message('WASD oder die Pfeiltasten zur Bewegung. Ziehen zum Umschauen.')}else{lookHome(which);if(selected)transform.attach(selected)}}
+byId('home').onclick=()=>lookHome(view);
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('active'));b.classList.add('active');transform.setMode(b.dataset.tool)});
+document.querySelectorAll('.asset').forEach(b=>b.onclick=()=>add(b.dataset.type,Math.random()*2-.8,Math.random()*2-.8));
+byId('duplicate').onclick=()=>{if(!selected||selected.userData.type==='glb')return;const d=selected;const g=add(d.userData.type,d.position.x+1.2,d.position.z+1.2,d.userData.name+' Kopie');g.rotation.y=d.rotation.y;g.scale.copy(d.scale);g.userData.notes=d.userData.notes;save()};
+byId('delete').onclick=()=>{if(!selected)return;const i=objects.indexOf(selected);world.remove(selected);objects.splice(i,1);select(null);save()};
+byId('reset').onclick=()=>{if(confirm('Die lokale Beispielszene zurücksetzen?')){startDemo();message('Beispielszene wiederhergestellt')}};
+for(const id of ['name','itemid','status','x','z','rotation','notes'])byId(id).addEventListener('input',()=>{if(!selected)return;const d=selected.userData;d.name=byId('name').value;d.id=byId('itemid').value;d.status=byId('status').value;d.notes=byId('notes').value;selected.position.x=Number(byId('x').value)||0;selected.position.z=Number(byId('z').value)||0;selected.rotation.y=(Number(byId('rotation').value)||0)*Math.PI/180;byId('object-title').textContent=d.name;save()});
+byId('export').onclick=()=>{const blob=new Blob([JSON.stringify({format:'ATLAS-1',objects:serialize()},null,2)],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='atlas-baustelle.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)};
+byId('import').onclick=()=>byId('json-file').click();
+byId('json-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.objects))throw new Error('Kein ATLAS-Projekt');restore(data.objects);message('Projekt geladen')}catch(err){message('Import fehlgeschlagen: '+err.message)}e.target.value=''};
+byId('load-glb').onclick=()=>byId('glb-file').click();
+byId('glb-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);try{const gltf=await new GLTFLoader().loadAsync(url);const g=tag(gltf.scene,'glb',f.name);world.add(g);objects.push(g);select(g);save();message('GLB geladen. Importierte GLB-Dateien werden nicht in JSON gespeichert.')}catch(err){message('GLB-Import fehlgeschlagen: '+err.message)}finally{URL.revokeObjectURL(url);e.target.value=''}};
+const ray=new THREE.Raycaster(),point=new THREE.Vector2();
+let down=null;
+renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];if(view==='walk'){pointerStart=[e.clientX,e.clientY]}});
+renderer.domElement.addEventListener('pointermove',e=>{if(view==='walk'&&pointerStart){walkYaw-=(e.clientX-pointerStart[0])*.004;walkPitch=Math.max(-1.2,Math.min(1.2,walkPitch-(e.clientY-pointerStart[1])*.003));pointerStart=[e.clientX,e.clientY]}});
+renderer.domElement.addEventListener('pointerup',e=>{if(view==='walk'){pointerStart=null;return}if(dragging||!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>7)return;const r=renderer.domElement.getBoundingClientRect();point.set((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height*2-1));ray.setFromCamera(point,ortho);const hits=ray.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o&&!o.userData.item)o=o.parent;if(o)select(o)}else select(null)});
+window.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;walkPress.add(e.key.toLowerCase());if(view!=='walk'){if(e.key.toLowerCase()==='g')transform.setMode('translate');if(e.key.toLowerCase()==='r')transform.setMode('rotate');if(e.key.toLowerCase()==='s')transform.setMode('scale')}});
+window.addEventListener('keyup',e=>walkPress.delete(e.key.toLowerCase()));
+document.querySelectorAll('#walkpad button').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();walkPress.add(b.dataset.key);b.setPointerCapture(e.pointerId)};b.onpointerup=()=>walkPress.delete(b.dataset.key);b.onpointercancel=()=>walkPress.delete(b.dataset.key)});
+function tickWalk(delta){const forward=Number(walkPress.has('w')||walkPress.has('arrowup'))-Number(walkPress.has('s')||walkPress.has('arrowdown'));const right=Number(walkPress.has('d')||walkPress.has('arrowright'))-Number(walkPress.has('a')||walkPress.has('arrowleft'));const speed=delta*5;walkCamera.position.x+=(Math.sin(walkYaw)*forward+Math.cos(walkYaw)*right)*speed;walkCamera.position.z+=(Math.cos(walkYaw)*forward-Math.sin(walkYaw)*right)*speed;walkCamera.position.y=1.8;walkCamera.rotation.order='YXZ';walkCamera.rotation.y=walkYaw;walkCamera.rotation.x=walkPitch}
+let old=performance.now();
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);const asp=w/h;ortho.left=-13*asp;ortho.right=13*asp;ortho.top=13;ortho.bottom=-13;ortho.updateProjectionMatrix();walkCamera.aspect=asp;walkCamera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+try{const saved=localStorage.getItem('atlas-scene-v1');if(saved){const list=JSON.parse(saved);if(Array.isArray(list))restore(list);else startDemo()}else startDemo()}catch(err){startDemo()}
+lookHome('iso');
+function animate(time){requestAnimationFrame(animate);const dt=Math.min((time-old)/1000,.05);old=time;if(view==='walk')tickWalk(dt);else orbit.update();renderer.render(scene,active)}
+requestAnimationFrame(animate);
+</script></body></html>
